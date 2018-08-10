@@ -9,7 +9,9 @@ const app = express();
 
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 // parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.urlencoded({ extended: false }));
+
+
 let conn = mysqlCon.getConnection();
 conn.connect(function(err) {
   if (err) throw err;
@@ -47,6 +49,15 @@ app.post('/getUserDetails',verifyToken,function(req,res){
     });
 });
 
+app.post('/getAllUsers',verifyToken,function(req,res){
+  var sql = "SELECT name,mobile,email FROM users";
+    conn.query(sql, function (err, result) {
+      if (err) throw err;
+      let data = {status: "success",data: result};
+      res.status(200);
+      res.json(data);
+    });
+});
 
 app.post('/updateUserDetails',verifyToken,function(req,res){
   let email = req.body.email;
