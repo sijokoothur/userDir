@@ -8,8 +8,6 @@ const verifyToken = require('./auth/VerifyToken');
 const expressValidator = require('express-validator');
 const app = express();
 
-
-
 app.use(expressValidator());
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 // parse application/x-www-form-urlencoded
@@ -97,12 +95,25 @@ app.post('/updateUserDetails',verifyToken,function(req,res){
   let name = data.name;
   let mobile = data.mobile;
 
+  req.checkBody('data.name', 'Name is required').notEmpty()
+  req.checkBody('email','Email Id is required').notEmpty().isEmail();
+  req.checkBody('data.mobile', 'Mobile is required').notEmpty().isNumeric();
+  let errors = req.validationErrors();
+
+  if(errors) {
+    let data = {valid: "false",errors: errors};
+    res.status(200);
+    res.json(data);
+  } 
+  else {
+    
     let sql = "SELECT count(*) as cnt FROM users where email = '"+email+"'";
     conn.query(sql, function (err, result,fields) {
       if (err) throw err;
 
       let rowCount = result[0].cnt;
-      if(rowCount == 1){
+      if(rowCount == 1) {
+        
         sql = "UPDATE users SET name = '"+name+"' , mobile = '"+mobile+"' WHERE email = '"+email+"'";
         conn.query(sql,function(err,result){
           if(err) throw err;
@@ -112,13 +123,13 @@ app.post('/updateUserDetails',verifyToken,function(req,res){
           
         });
 
-      } else{
+      } else {
         let data = {status: "invalid user"};
         res.status(200);
         res.json(data);
       }
     });
-
+  }
 });
 
 app.post('/authenticateUser',function(req,res){
