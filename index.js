@@ -29,7 +29,7 @@ app.post('/addUser',function(req,res){
     var sql = "INSERT INTO users (name, email,mobile,password) VALUES ('"+name+"', '"+email+"','"+mobile+"','"+password+"')";
         conn.query(sql, function (err, result) {
           if (err) throw err;
-          let data = {status: "success"};
+          let data = {status: "success",username: email,password: password};
           res.status(200);
           res.json(data);
         }); 
@@ -46,6 +46,7 @@ app.post('/getUserDetails',verifyToken,function(req,res){
       res.json(data);
     });
 });
+
 
 app.post('/updateUserDetails',verifyToken,function(req,res){
   let email = req.body.email;
