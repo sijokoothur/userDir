@@ -5,12 +5,15 @@ const passwordGenerater = require('generate-password');
 const jwt = require('jsonwebtoken');
 const config = require('./config');
 const verifyToken = require('./auth/VerifyToken');
+const expressValidator = require('express-validator');
 const app = express();
 
+
+
+app.use(expressValidator());
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
-
 
 let conn = mysqlCon.getConnection();
 conn.connect(function(err) {
@@ -23,18 +26,33 @@ app.post('/addUser',function(req,res){
     let email = req.body.email;
     let mobile = req.body.mobile;
 
-    let password = passwordGenerater.generate({
-      length: 10,
-      numbers: true
-    });
+    req.checkBody('name', 'Name is required').notEmpty()
+    req.checkBody('email','Email Id is required').notEmpty().isEmail();
+    req.checkBody('mobile', 'Mobile is required').notEmpty().isNumeric();
+    let errors = req.validationErrors();
 
-    var sql = "INSERT INTO users (name, email,mobile,password) VALUES ('"+name+"', '"+email+"','"+mobile+"','"+password+"')";
-        conn.query(sql, function (err, result) {
-          if (err) throw err;
-          let data = {status: "success",username: email,password: password};
-          res.status(200);
-          res.json(data);
-        }); 
+    if(errors) {
+      
+      let data = {valid: "false",errors: errors};
+      res.status(200);
+      res.json(data);
+
+    } 
+    else {
+      
+      let password = passwordGenerater.generate({
+        length: 10,
+        numbers: true
+      });
+  
+      var sql = "INSERT INTO users (name, email,mobile,password) VALUES ('"+name+"', '"+email+"','"+mobile+"','"+password+"')";
+      conn.query(sql, function (err, result) {
+        if (err) throw err;
+        let data = {status: "success",username: email,password: password};
+        res.status(200);
+        res.json(data);
+      }); 
+    } 
 });
 
 app.post('/getUserDetails',verifyToken,function(req,res){
