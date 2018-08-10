@@ -57,14 +57,28 @@ app.post('/addUser',function(req,res){
 
 app.post('/getUserDetails',verifyToken,function(req,res){
   let email = req.body.email;
-  
-  var sql = "SELECT name,mobile,email FROM users where email = '"+email+"'";
+
+  req.checkBody('email','Email Id is required').notEmpty().isEmail();
+  let errors = req.validationErrors();
+
+  if(errors) {
+    
+    let data = {valid: "false",errors: errors};
+    res.status(200);
+    res.json(data);
+
+  } 
+  else{
+    
+    var sql = "SELECT name,mobile,email FROM users where email = '"+email+"'";
     conn.query(sql, function (err, result) {
       if (err) throw err;
       let data = {status: "success",data: result};
       res.status(200);
       res.json(data);
     });
+  }
+  
 });
 
 app.post('/getAllUsers',verifyToken,function(req,res){
